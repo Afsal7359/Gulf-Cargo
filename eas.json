@@ -1,0 +1,23 @@
+{
+  "build": {
+    "production": {
+      "ios": {
+        "distribution": "store"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "development": {
+      "ios": {
+        "distribution": "internal"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

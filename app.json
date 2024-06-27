@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "Gulf Cargo",
+    "slug": "gulf-cargo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/Images/logo.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/Images/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.afsal7359.gulfcargo"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/Images/logo.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.afsal7359.gulfcargo"
+    },
+    "web": {
+      "favicon": "./assets/Images/logo.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f0a54ed5-14c5-4536-9389-f0e7e21880ee"
+      }
+    },
+    "owner": "afsal7359"
+  }
+}
