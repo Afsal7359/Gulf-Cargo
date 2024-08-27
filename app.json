@@ -14,6 +14,14 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "plugins": [
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.afsal7359.gulfcargo"
@@ -23,6 +31,10 @@
         "foregroundImage": "./assets/Images/logo.png",
         "backgroundColor": "#ffffff"
       },
+      "permissions": [
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE"
+      ],
       "package": "com.afsal7359.gulfcargo"
     },
     "web": {

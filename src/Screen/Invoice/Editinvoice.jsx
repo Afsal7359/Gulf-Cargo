@@ -6,14 +6,17 @@ import { Picker } from '@react-native-picker/picker';
 import CreateCustomer from '../../Components/Modal/CreateCustomer';
 import { checkTokenAndProceed } from '../../Components/Tokencheck/TockenCheck';
 import CreateReciever from '../../Components/Modal/CreateReciever';
-import { CreateInvoice, GetAllCollectedBy, GetAllCourierCompany, GetAllReciever, GetAllsender, GetBookingNumber, GetBranchList, GetDriversByBranchId, GetPaymentMethod, GetShippingMethod, GetStaffByBranchId, GetStatusData } from '../../Api/Invoice';
+import { CreateInvoice, EditInvoiceApi, GetAllCollectedBy, GetAllCourierCompany, GetAllReciever, GetAllsender, GetBookingNumber, GetBranchList, GetDriversByBranchId, GetPaymentMethod, GetShippingMethod, GetStaffByBranchId, GetStatusData } from '../../Api/Invoice';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import moment from 'moment';
 import { Toast } from 'toastify-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AddIcon from '../../../assets/imagesS/addicon.png'
 
-const Createinvoice = ({navigation}) => {
+const Editinvoice = ({navigation,route}) => {
+  const { data,id } = route.params;
+  console.log(data,"routre");
+  
   const [branch,setBranch]=useState();
     useEffect(()=>{
         checkTokenAndProceed(navigation)
@@ -36,30 +39,31 @@ const Createinvoice = ({navigation}) => {
     const [checkuser,setcheckuser]=useState("")
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
     const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
-    const [date,setDate]=useState();
-    const [time,setTime]=useState();
+    const [date,setDate]=useState(data?.collection_details?.shiping_date);
+    const [time,setTime]=useState(data?.time);
 
       const [formData, setFormData] = useState({
-        bookingNo: '',
+        bookingNo: data?.collection_details?.booking_no,
         branchList: '',
-        valueOfGoods:"",
-        selectSender: '',
-        senderAddress: '',
-        senderPhone: '',
-        selectCustomer: '',
-        customerAddress: '',
-        customerPhone: '',
-        courierCompany: '',
-        shippingMethod: '',
-        paymentMethod: '',
-        status: 15,
-        date: '',
-        collectBy: '',
-        name: '',
+        valueOfGoods:data?.value_of_goods,
+        selectSender: data?.sender?.id,
+        senderAddress: data?.sender?.address,
+        senderPhone: data?.sender?.phone,
+        selectCustomer: data?.reciver?.id,
+        customerAddress:data?.reciver?.address,
+        customerPhone: data?.reciver?.phone,
+        courierCompany:data?.agency_id,
+        shippingMethod:  data?.shipping_method_id,
+        paymentMethod: data?.payment_method,
+        status: data?.status_id,
+        date: data?.collection_details?.shiping_date,
+        collectBy: data?.collected_by,
+        name:data?.other_details?.staff,
         trackingCode: '',
-        deliveryType: '',
-        specialRemark:"",
-        time: '',
+        deliveryType: data?.delivery_type,
+        specialRemark:data?.special_remarks,
+        time: data?.time,
+        userid: data?.staff_id !== null ? data?.staff_id: data?.driver_id !== null ? data?.driver_id:""
       });
 
       const showDatePicker = () => {
@@ -92,20 +96,27 @@ const Createinvoice = ({navigation}) => {
       const handleInputChange = (name, value) => {
         setFormData({ ...formData, [name]: value });
       };
-      useEffect(() => {
-        const today = new Date();
-        const formattedDate = today.toISOString().split('T')[0]; // Format as 'YYYY-MM-DD' 
-        const formattedTime = today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // Format as 'HH:MM'
-        // setFormData({ 
-        //   ...formData,
-        //   date: formattedDate,
-        //   time:formattedTime,
-        //   status:15,
-        //  });
+      useEffect(()=>{
+        if (data?.driver_id === null) {
+          setcheckuser("driver");
+        } else if (data?.driver_id === null) {
+          setcheckuser('staff');
+        }
+      },[])
+      // useEffect(() => {
+      //   const today = new Date();
+      //   const formattedDate = today.toISOString().split('T')[0]; // Format as 'YYYY-MM-DD' 
+      //   const formattedTime = today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // Format as 'HH:MM'
+      //   // setFormData({ 
+      //   //   ...formData,
+      //   //   date: formattedDate,
+      //   //   time:formattedTime,
+      //   //   status:15,
+      //   //  });
     
-          setDate(formattedDate);
-          setTime(formattedTime);              
-      }, []);
+      //     setDate(formattedDate);
+      //     setTime(formattedTime);              
+      // }, []);
       const validateBasicInfo = () => {
         const { bookingNo } = formData;
         if (!bookingNo ) {
@@ -171,6 +182,7 @@ const Createinvoice = ({navigation}) => {
           const userInfo = JSON.parse(userInfoString);
           const branch_id = userInfo?.branch_id; 
           const FormsData={
+            invId:id,
             new_book_no:formData.bookingNo,
             booking_number:formData.bookingNo,
             sender_id:formData.selectSender,
@@ -188,14 +200,14 @@ const Createinvoice = ({navigation}) => {
             branch_id:branch_id,
           }
           if (checkuser === "driver") {
-            FormsData.driver_id = formData.name;
+            FormsData.driver_id = formData.userid;
           } else if (checkuser === "staff") {
-            FormsData.staff_id = formData.name;
+            FormsData.staff_id = formData.userid;
           }
           console.log(FormsData,"gggggggggggggggg");
-          const response = await CreateInvoice(FormsData);
+          const response = await EditInvoiceApi(FormsData);
           if(response.success){
-            Toast.success("Invoice Created Successfully");
+            Toast.success("Invoice Updated Successfully");
             console.log(response);
             navigation.navigate("home")
           }else{
@@ -231,7 +243,7 @@ const Createinvoice = ({navigation}) => {
     
 
       useEffect(()=>{
-        BookingNumberFetch();
+        // BookingNumberFetch();
         BranchListFetch();
         branchData();
       },[])
@@ -245,21 +257,21 @@ const Createinvoice = ({navigation}) => {
           ToastAndroid.show("network problem !!", ToastAndroid.LONG); 
         }
       }
-      const BookingNumberFetch=async()=>{
-        try {
-          const response = await GetBookingNumber();
-          if(response.success){
+      // const BookingNumberFetch=async()=>{
+      //   try {
+      //     const response = await GetBookingNumber();
+      //     if(response.success){
            
-            handleInputChange('bookingNo',response.data.nextBookingNumber)
-          }else{
-            console.log(response);
-           ToastAndroid.show('Error', 'Failed to fetch booking number',ToastAndroid.LONG);
-          }
-        } catch (error) {
-          console.log(error);
-          ToastAndroid.show("network problem !!", ToastAndroid.LONG); 
-        }
-      }
+      //       handleInputChange('bookingNo',response.data.nextBookingNumber)
+      //     }else{
+      //       console.log(response);
+      //      ToastAndroid.show('Error', 'Failed to fetch booking number',ToastAndroid.LONG);
+      //     }
+      //   } catch (error) {
+      //     console.log(error);
+      //     ToastAndroid.show("network problem !!", ToastAndroid.LONG); 
+      //   }
+      // }
       const BranchListFetch=async()=>{
         try {
           const response= await GetBranchList();
@@ -430,7 +442,7 @@ const Createinvoice = ({navigation}) => {
                 selectedValue={formData.selectSender}
                 onValueChange={handleSenderChange}
             >
-                <Picker.Item label="Select Sender" value="" />
+                <Picker.Item label={data?.sender?.name} value="" />
                 {sender.map((item) => (
                     <Picker.Item key={item.id} label={item.name} value={item.id} />
                 ))}
@@ -465,7 +477,7 @@ const Createinvoice = ({navigation}) => {
                 selectedValue={formData.selectCustomer}
                 onValueChange={handleRecieverChange}
             >
-                <Picker.Item label="Select Reciever" value="" />
+                <Picker.Item label={data?.reciver?.name} value="" />
                 {reciever.map((item) => (
                     <Picker.Item key={item.id} label={item.name} value={item.id} />
                 ))}
@@ -497,7 +509,7 @@ const Createinvoice = ({navigation}) => {
           <View>
             <View style={styles.pickerView}>
               <Picker style={{ color: Color.Black }} selectedValue={formData.courierCompany} onValueChange={(value) => handleInputChange('courierCompany', value)}>
-                {/* <Picker.Item label="Select Courier Company" value="" /> */}
+                <Picker.Item label={data?.collection_details?.courier_company} value="" />
                 {courier.map((item) => (
                     <Picker.Item key={item.id} label={item.name} value={item.id} />
                 ))}
@@ -505,7 +517,7 @@ const Createinvoice = ({navigation}) => {
             </View>
             <View style={styles.pickerView}>
               <Picker style={{ color: Color.Black }} selectedValue={formData.shippingMethod} onValueChange={(value) => handleInputChange('shippingMethod', value)}>
-              <Picker.Item label="Select Shipping Method" value="" />
+              <Picker.Item label={data?.collection_details?.shipping_method} value="" />
               {shippingMethod.map((item) => (
                     <Picker.Item key={item.id} label={item.name} value={item.id} />
                 ))}
@@ -513,7 +525,7 @@ const Createinvoice = ({navigation}) => {
             </View>
             <View style={styles.pickerView}>
               <Picker style={{ color: Color.Black }} selectedValue={formData.paymentMethod} onValueChange={(value) => handleInputChange('paymentMethod', value)}>
-                {/* <Picker.Item label="Select Payment Method" value="" /> */}
+                <Picker.Item label={data?.charges_payments?.payment_method} value="" />
                 {paymentMethod.map((item) => (
                     <Picker.Item key={item.id} label={item.title} value={item.id} />
                 ))}
@@ -521,7 +533,7 @@ const Createinvoice = ({navigation}) => {
             </View>
             <View style={styles.pickerView}>
               <Picker style={{ color: Color.Black }} selectedValue={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
-                <Picker.Item label="Enquiry collected" value={"15"} />
+                <Picker.Item label={data?.collection_details?.shipment_status} value="" />
                 {status.map((item) => (
                     <Picker.Item key={item.id} label={item.name} value={item.id} />
                 ))}
@@ -553,7 +565,7 @@ const Createinvoice = ({navigation}) => {
             </View>
             <View style={styles.pickerView}>
               <Picker style={{ color: Color.Black }} selectedValue={formData.name} onValueChange={(value) => handleInputChange('name', value)}>
-              <Picker.Item label="Select name" value="" />
+              <Picker.Item label={data?.other_details?.staff} value="" />
                 {user.map((item) => (
                     <Picker.Item key={item.id} label={item.name?item.name:item.full_name} value={item.id} />
                 ))}
@@ -588,7 +600,7 @@ const Createinvoice = ({navigation}) => {
   )
 }
 
-export default Createinvoice
+export default Editinvoice
 const deviceWidth = Dimensions.get("window").width;
 const deviceHeight = Dimensions.get("window").height;
 const styles = StyleSheet.create({
